@@ -43,7 +43,7 @@
 #include <rtt/InputPort.hpp>
 #include <rtt/OutputPort.hpp>
 #include <urdf/model.h>
-#include <sensor_msgs/JointState.h>
+//#include <sensor_msgs/JointState.h>
 
 class RttHwInterface : public hardware_interface::RobotHW
 {
@@ -55,11 +55,6 @@ public:
     void read();
     void write();
 
-    unsigned int getNrOfJoints(){ return state_joint_effort_.size();}
-    double* getJointPositionPtr(){ return state_joint_position_.data();}
-    double* getJointVelocityPtr(){ return state_joint_velocity_.data();}
-    double* getJointEffortPtr(){ return state_joint_effort_.data();}
-
 private:
     RTT::TaskContext* owner_;
     // Provide state, velocity and position interfaces in this example
@@ -68,16 +63,7 @@ private:
     hardware_interface::VelocityJointInterface velocity_joint_interface_;
     hardware_interface::EffortJointInterface effort_joint_interface_;
 
-    // Data is read from/written to these internal variables
-    std::vector<double> state_joint_position_;
-    std::vector<double> state_joint_velocity_;
-    std::vector<double> state_joint_effort_;
-    std::vector<double> cmd_joint_velocity_;
-    std::vector<double> cmd_joint_position_;
-    std::vector<double> cmd_joint_effort_;
-
-
-    RTT::InputPort<Eigen::VectorXd> port_joint_position_in,
+    RTT::InputPort<Eigen::VectorXd>  port_joint_position_in,
                                      port_joint_velocity_in,
                                      port_joint_torque_in;
 
@@ -86,12 +72,11 @@ private:
                     jnt_trq_in;
 
     RTT::OutputPort<Eigen::VectorXd> port_joint_position_cmd_out,
-                                    port_joint_velocity_cmd_out,
-                                    port_joint_torque_cmd_out;
+                                     port_joint_velocity_cmd_out,
+                                     port_joint_torque_cmd_out;
     Eigen::VectorXd jnt_pos_cmd_out,
                     jnt_vel_cmd_out,
                     jnt_trq_cmd_out;
-    unsigned int ndof;
 };
 
 
