@@ -34,7 +34,7 @@
 #include <hardware_interface/joint_state_interface.h>
 #include <joint_limits_interface/joint_limits_interface.h>
 #include <hardware_interface/robot_hw.h>
-#include <rtt_ros_kdl_tools/tools.hpp>
+//#include <rtt_ros_kdl_tools/tools.hpp>
 #include <rtt/Port.hpp>
 #include <Eigen/Core>
 #include <rtt/TaskContext.hpp>
@@ -42,6 +42,8 @@
 #include <rtt/os/TimeService.hpp>
 #include <rtt/InputPort.hpp>
 #include <rtt/OutputPort.hpp>
+#include <urdf/model.h>
+#include <sensor_msgs/JointState.h>
 
 class RttHwInterface : public hardware_interface::RobotHW
 {
@@ -73,7 +75,7 @@ private:
     std::vector<double> cmd_joint_velocity_;
     std::vector<double> cmd_joint_position_;
     std::vector<double> cmd_joint_effort_;
-    
+
 
     RTT::InputPort<Eigen::VectorXd> port_joint_position_in,
                                      port_joint_velocity_in,
