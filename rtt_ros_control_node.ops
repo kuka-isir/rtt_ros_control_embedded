@@ -13,7 +13,13 @@ ros.import("rtt_ros_control_embedded")
 loadComponent("RttRosControl","RttRosControl")
 
 ## Give it a periodic activity
-setActivity("RttRosControl",0.001,HighestPriority,ORO_SCHED_RT)
+setActivity("RttRosControl",0.001,LowestPriority,ORO_SCHED_RT)
+
+
+## Preload controllers
+
+RttRosControl.preloadController("joint_trajectory_controller")
+RttRosControl.preloadController("joint_state_controller")
 
 ## Configure the RttRosControl component
 configureComponent("RttRosControl")

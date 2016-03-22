@@ -57,27 +57,42 @@ class RttRosControl : public RTT::TaskContext{
 
     // For saving last update time, so period can be handed to controller manager
     ros::Time last_update_time_;
+    // Controllers to load before the realtime loop !
+    std::vector<std::string> controllers_list_;
     
   public:
     RttRosControl(const std::string& name):
       TaskContext(name)
-    {}
+    {
+        this->addProperty("controllers_list",controllers_list_);
+        this->addOperation("preloadController",&RttRosControl::preloadController,this,RTT::OwnThread);
+        
+        non_rt_ros_nh_.reset(new ros::NodeHandle(""));
+        non_rt_ros_nh_->setCallbackQueue(&non_rt_ros_queue_);
+        this->non_rt_ros_queue_thread_ = boost::thread( boost::bind( &RttRosControl::serviceNonRtRosQueue,this ) );
+
+        hw_interface_.reset(new RttHwInterface(this));
+
+        controller_manager_.reset(new controller_manager::ControllerManager(hw_interface_.get(), *non_rt_ros_nh_));
+    }
 
     ~RttRosControl()
-    {}
+    {
+        for(const auto& c : controllers_list_)
+        {
+            RTT::log(RTT::Info) << "Unloading controller "<<c<<RTT::endlog();
+            controller_manager_->unloadController(c);
+        }
+    }
 
   private:
-
+    bool preloadController(const std::string& controller_name)
+    {
+       ROS_INFO("Loading controller [%s]",controller_name.c_str());
+       controllers_list_.push_back(controller_name);
+       return controller_manager_->loadController(controller_name); 
+    }
     bool configureHook(){
-
-      non_rt_ros_nh_.reset(new ros::NodeHandle(""));
-      non_rt_ros_nh_->setCallbackQueue(&non_rt_ros_queue_);
-      this->non_rt_ros_queue_thread_ = boost::thread( boost::bind( &RttRosControl::serviceNonRtRosQueue,this ) );
-
-      hw_interface_.reset(new RttHwInterface(this));
-      
-      controller_manager_.reset(new controller_manager::ControllerManager(hw_interface_.get(), *non_rt_ros_nh_));
-
       last_update_time_ = rtt_rosclock::rtt_now();
     }
 
