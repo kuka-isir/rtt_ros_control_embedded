@@ -165,7 +165,7 @@ public:
         this->addOperation("load_controller",&RttRosControl::loadControllerSrv,this,RTT::OwnThread);
         this->addOperation("unload_controller",&RttRosControl::unloadControllerSrv,this,RTT::OwnThread);
         this->addOperation("reload_controller_libraries",&RttRosControl::reloadControllerLibrariesSrv,this,RTT::OwnThread);
-        this->addOperation("switch_controller",&RttRosControl::switchController,this,RTT::OwnThread);
+        this->addOperation("switch_controller",&RttRosControl::switchControllerSrv,this,RTT::OwnThread);
 
         boost::shared_ptr<rtt_rosservice::ROSService> rosservice =
             this->getProvider<rtt_rosservice::ROSService>("rosservice");
