@@ -1,5 +1,11 @@
 #!/usr/bin/env deployer
 import("rtt_rospack")
+import("rtt_roscomm")
+import("rtt_std_srvs")
+
+import("rtt_control_msgs")
+import("rtt_controller_manager_msgs")
+
 runScript(ros.find("lwr_launch")+"/scripts/lwr_loader.ops")
 loadRobot(true)
 
