@@ -88,7 +88,7 @@ private:
     // For saving last update time, so period can be handed to controller manager
     ros::Time last_update_time_;
     // Controllers to load before the realtime loop !
-    std::vector<std::string> controllers_list_;
+    std::vector<std::string> controllers_list_,stop_controllers_;
 private:
 
     hardware_interface::RobotHW* robot_hw_;
@@ -165,6 +165,7 @@ public:
         this->addOperation("load_controller",&RttRosControl::loadControllerSrv,this,RTT::OwnThread);
         this->addOperation("unload_controller",&RttRosControl::unloadControllerSrv,this,RTT::OwnThread);
         this->addOperation("reload_controller_libraries",&RttRosControl::reloadControllerLibrariesSrv,this,RTT::OwnThread);
+        this->addOperation("switch_controller",&RttRosControl::switchController,this,RTT::OwnThread);
 
         boost::shared_ptr<rtt_rosservice::ROSService> rosservice =
             this->getProvider<rtt_rosservice::ROSService>("rosservice");
@@ -212,7 +213,7 @@ private:
     }
     bool startControllers()
     {
-        return switchController(controllers_list_,std::vector<std::string>(),1);
+        return switchController(controllers_list_,stop_controllers_,controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
     }
     bool configureHook() {
         last_update_time_ = rtt_rosclock::rtt_now();
