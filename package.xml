@@ -17,7 +17,7 @@
   <build_depend>rtt_rosclock</build_depend>
   <build_depend>urdf</build_depend>
   <build_depend>rtt_roscomm</build_depend>
-  
+
   <run_depend>controller_manager</run_depend>
   <run_depend>hardware_interface</run_depend>
   <run_depend>roscpp</run_depend>
@@ -32,5 +32,7 @@
   <export>
       <plugin_depend>rtt_rosnode</plugin_depend>
       <plugin_depend>rtt_rosclock</plugin_depend>
+      <plugin_depend>rtt_control_msgs</plugin_depend>
+      <plugin_depend>rtt_controller_manager_msgs</plugin_depend>
   </export>
 </package>
