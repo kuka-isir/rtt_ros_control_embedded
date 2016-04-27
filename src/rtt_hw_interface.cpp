@@ -1,8 +1,6 @@
 
 #include <rtt_hw_interface/rtt_hw_interface.h>
-#include <controller_manager/controller_manager.h>
-
-//using namespace rtt_ros_kdl_tools;
+// #include <controller_manager/controller_manager.h>
 
 RttHwInterface::RttHwInterface(RTT::TaskContext* owner):
 owner_(owner)
@@ -11,8 +9,8 @@ owner_(owner)
     owner_->ports()->addPort("JointVelocity", port_joint_velocity_in).doc("");
     owner_->ports()->addPort("JointTorque", port_joint_torque_in).doc("");
 
-    owner_->ports()->addPort("JointPositionCommand", port_joint_position_cmd_out).doc("");
-    owner_->ports()->addPort("JointVelocityCommand", port_joint_velocity_cmd_out).doc("");
+    // owner_->ports()->addPort("JointPositionCommand", port_joint_position_cmd_out).doc("");
+    // owner_->ports()->addPort("JointVelocityCommand", port_joint_velocity_cmd_out).doc("");
     owner_->ports()->addPort("JointTorqueCommand", port_joint_torque_cmd_out).doc("");
 
     std::string robot_description_param_name("robot_description");
@@ -45,8 +43,8 @@ owner_(owner)
     jnt_vel_in.setZero(joint_names.size());
     jnt_trq_in.setZero(joint_names.size());
 
-    jnt_pos_cmd_out.setZero(joint_names.size());
-    jnt_vel_cmd_out.setZero(joint_names.size());
+    // jnt_pos_cmd_out.setZero(joint_names.size());
+    // jnt_vel_cmd_out.setZero(joint_names.size());
     jnt_trq_cmd_out.setZero(joint_names.size());
 
     for(size_t i=0; i<joint_names.size(); ++i)
