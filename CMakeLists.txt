@@ -1,16 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(rtt_ros_control_embedded)
 
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX11)
-    list(APPEND CMAKE_CXX_FLAGS "-std=c++11")
-elseif(COMPILER_SUPPORTS_CXX0X)
-    list(APPEND "-std=c++0x")
-else()
-        message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
-endif()
+set(CMAKE_BUILD_TYPE Release)
+
+set(CMAKE_CXX_FLAGS "-std=c++11")
 
 find_package(catkin REQUIRED COMPONENTS
     controller_manager
@@ -21,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
     urdf
     cmake_modules
 )
+
 find_package(orocos_kdl REQUIRED)
 find_package(Eigen REQUIRED)
 
@@ -34,13 +28,11 @@ include_directories(
 
 add_definitions(-DRTT_COMPONENT)
 
-## Declare a cpp library
 add_library(rtt_hw_interface
   src/rtt_hw_interface.cpp
 )
 orocos_component(${PROJECT_NAME} src/rtt_ros_control_embedded.cpp)
 
-## Specify libraries to link a library or executable target against
 target_link_libraries(rtt_hw_interface
   ${catkin_LIBRARIES}
   ${USE_OROCOS_LIBRARIES}
