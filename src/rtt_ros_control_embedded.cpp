@@ -33,9 +33,17 @@
 #include <ros/callback_queue.h>
 
 #include <rtt_rosclock/rtt_rosclock.h>
-#include <rtt_hw_interface/rtt_hw_interface.h>
-#include <rtt_roscomm/rosservice.h>
 
+#include <boost/thread.hpp>
+
+#include <rtt_hw_interface/rtt_hw_interface.h>
+#include <algorithm>
+#include <boost/thread/thread.hpp>
+#include <boost/thread/condition.hpp>
+#include <sstream>
+#include <ros/console.h>
+#include <controller_manager/controller_loader.h>
+#include <controller_manager_msgs/ControllerState.h>
 #include "controller_manager/controller_spec.h"
 #include <pthread.h>
 #include <cstdio>
@@ -57,6 +65,7 @@
 #include <boost/thread/condition.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <controller_manager/controller_loader_interface.h>
+#include <rtt_roscomm/rosservice.h>
 
 using namespace RTT;
 using namespace controller_manager;
@@ -81,39 +90,54 @@ private:
     // Controllers to load before the realtime loop !
     std::vector<std::string> controllers_list_,stop_controllers_;
 private:
-    hardware_interface::RobotHW* robot_hw_;
+  hardware_interface::RobotHW* robot_hw_;
 
-    ros::NodeHandle root_nh_, cm_node_;
+  ros::NodeHandle root_nh_, cm_node_;
 
-    typedef boost::shared_ptr<ControllerLoaderInterface> LoaderPtr;
-    std::list<LoaderPtr> controller_loaders_;
+  typedef boost::shared_ptr<ControllerLoaderInterface> LoaderPtr;
+  std::list<LoaderPtr> controller_loaders_;
 
-    /** \name Controller Switching
-     *\{*/
-    std::vector<controller_interface::ControllerBase*> start_request_, stop_request_;
-    std::list<hardware_interface::ControllerInfo> switch_start_list_, switch_stop_list_;
-    bool please_switch_;
-    int switch_strictness_;
-    /*\}*/
+  /** \name Controller Switching
+   *\{*/
+  std::vector<controller_interface::ControllerBase*> start_request_, stop_request_;
+  std::list<hardware_interface::ControllerInfo> switch_start_list_, switch_stop_list_;
+  bool please_switch_;
+  int switch_strictness_;
+  /*\}*/
 
-    /** \name Controllers List
-     * The controllers list is double-buffered to avoid needing to lock the
-     * real-time thread when switching controllers in the non-real-time thread.
-     *\{*/
-    /// Mutex protecting the current controllers list
-    boost::recursive_mutex controllers_lock_;
-    /// Double-buffered controllers list
-    std::vector<ControllerSpec> controllers_lists_[2];
-    /// The index of the current controllers list
-    int current_controllers_list_;
-    /// The index of the controllers list being used in the real-time thread.
-    int used_by_realtime_;
-    /*\}*/
+  /** \name Controllers List
+   * The controllers list is double-buffered to avoid needing to lock the
+   * real-time thread when switching controllers in the non-real-time thread.
+   *\{*/
+  /// Mutex protecting the current controllers list
+  boost::recursive_mutex controllers_lock_;
+  /// Double-buffered controllers list
+  std::vector<ControllerSpec> controllers_lists_[2];
+  /// The index of the current controllers list
+  int current_controllers_list_;
+  /// The index of the controllers list being used in the real-time thread.
+  int used_by_realtime_;
+  /*\}*/
 
 
-    boost::mutex services_lock_;
-    ros::ServiceServer srv_list_controllers_, srv_list_controller_types_, srv_load_controller_;
-    ros::ServiceServer srv_unload_controller_, srv_switch_controller_, srv_reload_libraries_;
+  /** \name ROS Service API
+   *\{*/
+    // bool listControllerTypesSrv(controller_manager_msgs::ListControllerTypes::Request &req,
+    //                             controller_manager_msgs::ListControllerTypes::Response &resp);
+    // bool listControllersSrv(controller_manager_msgs::ListControllers::Request &req,
+    //                         controller_manager_msgs::ListControllers::Response &resp);
+    // bool switchControllerSrv(controller_manager_msgs::SwitchController::Request &req,
+    //                          controller_manager_msgs::SwitchController::Response &resp);
+    // bool loadControllerSrv(controller_manager_msgs::LoadController::Request &req,
+    //                         controller_manager_msgs::LoadController::Response &resp);
+    // bool unloadControllerSrv(controller_manager_msgs::UnloadController::Request &req,
+    //                        controller_manager_msgs::UnloadController::Response &resp);
+    // bool reloadControllerLibrariesSrv(controller_manager_msgs::ReloadControllerLibraries::Request &req,
+    //                                   controller_manager_msgs::ReloadControllerLibraries::Response &resp);
+  boost::mutex services_lock_;
+  ros::ServiceServer srv_list_controllers_, srv_list_controller_types_, srv_load_controller_;
+  ros::ServiceServer srv_unload_controller_, srv_switch_controller_, srv_reload_libraries_;
+  /*\}*/
 public:
     RttRosControl(const std::string& name):
         TaskContext(name),
@@ -143,12 +167,6 @@ public:
         controller_loaders_.push_back( LoaderPtr(new ControllerLoader<controller_interface::ControllerBase>("controller_interface",
                                        "controller_interface::ControllerBase") ) );
         // Advertise services (this should be the last thing we do in init)
-        /*srv_list_controllers_ = cm_node_.advertiseService("list_controllers", &ControllerManager::listControllersSrv, this);
-        srv_list_controller_types_ = cm_node_.advertiseService("list_controller_types", &ControllerManager::listControllerTypesSrv, this);
-        srv_load_controller_ = cm_node_.advertiseService("load_controller", &ControllerManager::loadControllerSrv, this);
-        srv_unload_controller_ = cm_node_.advertiseService("unload_controller", &ControllerManager::unloadControllerSrv, this);
-        srv_switch_controller_ = cm_node_.advertiseService("switch_controller", &ControllerManager::switchControllerSrv, this);
-        srv_reload_libraries_ = cm_node_.advertiseService("reload_controller_libraries", &ControllerManager::reloadControllerLibrariesSrv, this);*/
 
         this->addOperation("list_controllers",&RttRosControl::listControllersSrv,this,RTT::OwnThread);
         this->addOperation("list_controller_types",&RttRosControl::listControllerTypesSrv,this,RTT::OwnThread);
@@ -238,9 +256,7 @@ private:
             this->non_rt_ros_queue_.callAvailable(ros::WallDuration(timeout));
         }
     }
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-/// NOTE: This part is taken from https://github.com/ros-controls/ros_control
+
     // Must be realtime safe.
     void update(const ros::Time& time, const ros::Duration& period, bool reset_controllers = false)
     {
@@ -282,7 +298,8 @@ private:
       }
     }
 
-    controller_interface::ControllerBase* getControllerByName(const std::string& name)
+    controller_interface::ControllerBase*
+    getControllerByName(const std::string& name)
     {
       // Lock recursive mutex in this context
       boost::recursive_mutex::scoped_lock guard(controllers_lock_);
@@ -866,8 +883,6 @@ private:
     {
       controller_loaders_.push_back(controller_loader);
     }
-
-
 
 };
 
