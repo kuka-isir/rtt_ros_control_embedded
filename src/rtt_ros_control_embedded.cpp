@@ -138,7 +138,7 @@ public:
     {
         this->addProperty("controllers_list",controllers_list_);
         this->addOperation("preloadController",&RttRosControl::preloadController,this,RTT::OwnThread);
-        this->addOperation("startControllers",&RttRosControl::startControllers,this,RTT::OwnThread);
+        this->addOperation("startControllers",&RttRosControl::startControllers,this,RTT::ClientThread);
 
         non_rt_ros_nh_.reset(new ros::NodeHandle(""));
         non_rt_ros_nh_->setCallbackQueue(&non_rt_ros_queue_);
@@ -160,12 +160,12 @@ public:
         srv_switch_controller_ = cm_node_.advertiseService("switch_controller", &ControllerManager::switchControllerSrv, this);
         srv_reload_libraries_ = cm_node_.advertiseService("reload_controller_libraries", &ControllerManager::reloadControllerLibrariesSrv, this);*/
 
-        this->addOperation("list_controllers",&RttRosControl::listControllersSrv,this,RTT::OwnThread);
-        this->addOperation("list_controller_types",&RttRosControl::listControllerTypesSrv,this,RTT::OwnThread);
-        this->addOperation("load_controller",&RttRosControl::loadControllerSrv,this,RTT::OwnThread);
-        this->addOperation("unload_controller",&RttRosControl::unloadControllerSrv,this,RTT::OwnThread);
-        this->addOperation("reload_controller_libraries",&RttRosControl::reloadControllerLibrariesSrv,this,RTT::OwnThread);
-        this->addOperation("switch_controller",&RttRosControl::switchControllerSrv,this,RTT::OwnThread);
+        this->addOperation("list_controllers",&RttRosControl::listControllersSrv,this,RTT::ClientThread);
+        this->addOperation("list_controller_types",&RttRosControl::listControllerTypesSrv,this,RTT::ClientThread);
+        this->addOperation("load_controller",&RttRosControl::loadControllerSrv,this,RTT::ClientThread);
+        this->addOperation("unload_controller",&RttRosControl::unloadControllerSrv,this,RTT::ClientThread);
+        this->addOperation("reload_controller_libraries",&RttRosControl::reloadControllerLibrariesSrv,this,RTT::ClientThread);
+        this->addOperation("switch_controller",&RttRosControl::switchControllerSrv,this,RTT::ClientThread);
 
         boost::shared_ptr<rtt_rosservice::ROSService> rosservice =
             this->getProvider<rtt_rosservice::ROSService>("rosservice");
@@ -217,6 +217,7 @@ private:
     }
     bool configureHook() {
         last_update_time_ = rtt_rosclock::rtt_now();
+        return true;
     }
 
     void updateHook() {
