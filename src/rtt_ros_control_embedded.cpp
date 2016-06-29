@@ -225,6 +225,7 @@ private:
     }
     bool configureHook() {
         last_update_time_ = rtt_rosclock::rtt_now();
+        return true;
     }
 
     void updateHook() {
