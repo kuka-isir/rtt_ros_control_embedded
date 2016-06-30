@@ -213,6 +213,8 @@ private:
     }
     bool startControllers()
     {
+        if(!isRunning()) 
+            return false;
         return switchController(controllers_list_,stop_controllers_,controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
     }
     bool configureHook() {
