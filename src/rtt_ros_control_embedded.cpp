@@ -214,16 +214,16 @@ private:
     }
     bool startControllers()
     {
-        if(!isRunning()) 
+        if(!isRunning())
             return false;
         for(int i=0;i<controllers_list_.size();++i)
             ROS_INFO("Starting controller [%s]",controllers_list_[i].c_str());
         return switchController(controllers_list_,stop_controllers_,
-            controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
+            controller_manager_msgs::SwitchController::Request::STRICT);
     }
     bool stopControllers()
     {
-        if(!isRunning()) 
+        if(!isRunning())
             return false;
         for(int i=0;i<controllers_list_.size();++i)
             ROS_INFO("Stopping controller [%s]",controllers_list_[i].c_str());
