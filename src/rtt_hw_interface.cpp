@@ -61,10 +61,10 @@ owner_(owner)
       hardware_interface::JointStateHandle state_handle(joint_names[i], &jnt_pos_in[i], &jnt_vel_in[i], &jnt_trq_in[i]);
       joint_state_interface_.registerHandle(state_handle);
 
-      /*hardware_interface::JointHandle pos_handle(joint_state_interface_.getHandle(joint_names[i]), &jnt_pos_cmd_out[i]);
+      hardware_interface::JointHandle pos_handle(joint_state_interface_.getHandle(joint_names[i]), &jnt_pos_cmd_out[i]);
       position_joint_interface_.registerHandle(pos_handle);
 
-      hardware_interface::JointHandle vel_handle(joint_state_interface_.getHandle(joint_names[i]), &jnt_vel_cmd_out[i]);
+      /*hardware_interface::JointHandle vel_handle(joint_state_interface_.getHandle(joint_names[i]), &jnt_vel_cmd_out[i]);
       velocity_joint_interface_.registerHandle(vel_handle);*/
 
       hardware_interface::JointHandle eff_handle(joint_state_interface_.getHandle(joint_names[i]), &jnt_trq_cmd_out[i]);
@@ -77,8 +77,8 @@ owner_(owner)
     }
 
     registerInterface(&joint_state_interface_);
-    /*registerInterface(&velocity_joint_interface_);
-    registerInterface(&position_joint_interface_);*/
+    /*registerInterface(&velocity_joint_interface_);*/
+    registerInterface(&position_joint_interface_);
     registerInterface(&effort_joint_interface_);
 }
 /*
@@ -89,14 +89,22 @@ void RttHwInterface::cleanup()
 */
 void RttHwInterface::read()
 {
-    port_joint_position_in.readNewest(jnt_pos_in);
-    port_joint_velocity_in.readNewest(jnt_vel_in);
-    port_joint_torque_in.readNewest(jnt_trq_in);
+    jnt_pos_fs = port_joint_position_in.readNewest(jnt_pos_in);
+    // jnt_vel_fs = port_joint_velocity_in.readNewest(jnt_vel_in);
+    jnt_trq_fs = port_joint_torque_in.readNewest(jnt_trq_in);
 }
 
 void RttHwInterface::write()
 {
-    /*port_joint_position_cmd_out.write(jnt_pos_cmd_out);
-    port_joint_velocity_cmd_out.write(jnt_vel_cmd_out);*/
-    port_joint_torque_cmd_out.write(jnt_trq_cmd_out);
+    if(jnt_pos_fs == RTT::NewData)
+    {
+      port_joint_position_cmd_out.write(jnt_pos_cmd_out);
+      return;
+    }
+    /*port_joint_velocity_cmd_out.write(jnt_vel_cmd_out);*/
+    if(jnt_trq_fs == RTT::NewData)
+    {
+      port_joint_torque_cmd_out.write(jnt_trq_cmd_out);
+      return;
+    }
 }

@@ -87,6 +87,8 @@ private:
     Eigen::VectorXd jnt_pos_cmd_out,
                     jnt_vel_cmd_out,
                     jnt_trq_cmd_out;
+
+    RTT::FlowStatus jnt_pos_fs,jnt_trq_fs;
 };
 
 
