@@ -153,6 +153,7 @@ public:
         this->addProperty("controllers_list",controllers_list_);
         this->addOperation("preloadController",&RttRosControl::preloadController,this,RTT::OwnThread);
         this->addOperation("startControllers",&RttRosControl::startControllers,this,RTT::ClientThread);
+        this->addOperation("stopControllers",&RttRosControl::stopControllers,this,RTT::ClientThread);
 
         non_rt_ros_nh_.reset(new ros::NodeHandle(""));
         non_rt_ros_nh_->setCallbackQueue(&non_rt_ros_queue_);
@@ -213,20 +214,34 @@ public:
     }
 
 private:
-    bool preloadController(const std::string& controller_name)
-    {
-        ROS_INFO("Loading controller [%s]",controller_name.c_str());
-        controllers_list_.push_back(controller_name);
-        return this->loadController(controller_name);
-    }
-    bool startControllers()
-    {
-        return switchController(controllers_list_,stop_controllers_,controller_manager_msgs::SwitchController::Request::BEST_EFFORT);
-    }
-    bool configureHook() {
-        last_update_time_ = rtt_rosclock::rtt_now();
-        return true;
-    }
+  bool preloadController(const std::string& controller_name)
+  {
+      ROS_INFO("Loading controller [%s]",controller_name.c_str());
+      controllers_list_.push_back(controller_name);
+      return this->loadController(controller_name);
+  }
+  bool startControllers()
+  {
+      if(!isRunning())
+          return false;
+      for(int i=0;i<controllers_list_.size();++i)
+          ROS_INFO("Starting controller [%s]",controllers_list_[i].c_str());
+      return switchController(controllers_list_,stop_controllers_,
+          controller_manager_msgs::SwitchController::Request::STRICT);
+  }
+  bool stopControllers()
+  {
+      if(!isRunning())
+          return false;
+      for(int i=0;i<controllers_list_.size();++i)
+          ROS_INFO("Stopping controller [%s]",controllers_list_[i].c_str());
+      return switchController(std::vector<std::string>(),controllers_list_,
+          controller_manager_msgs::SwitchController::Request::STRICT);
+  }
+  bool configureHook() {
+      last_update_time_ = rtt_rosclock::rtt_now();
+      return true;
+  }
 
     void updateHook() {
 
