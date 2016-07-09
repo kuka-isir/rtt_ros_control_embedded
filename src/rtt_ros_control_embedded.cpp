@@ -253,7 +253,6 @@ private:
 
     void cleanupHook() {
         this->stopControllers();
-        this->update(rtt_rosclock::host_now(), ros::Duration(0.001));
         non_rt_ros_nh_->shutdown();
         non_rt_ros_queue_thread_.join();
     }
