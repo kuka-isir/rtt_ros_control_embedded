@@ -88,7 +88,7 @@ private:
                     jnt_vel_cmd_out,
                     jnt_trq_cmd_out;
 
-    RTT::FlowStatus jnt_pos_fs,jnt_trq_fs;
+    RTT::FlowStatus jnt_pos_fs,jnt_trq_fs,jnt_vel_fs;
 };
 
 
