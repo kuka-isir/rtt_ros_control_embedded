@@ -96,14 +96,12 @@ void RttHwInterface::read()
 
 void RttHwInterface::write()
 {
-    if(jnt_pos_fs == RTT::NewData)
+    if(jnt_pos_fs != RTT::NoData && port_joint_position_cmd_out.connected())
     {
       port_joint_position_cmd_out.write(jnt_pos_cmd_out);
-      return;
     }
-    if(jnt_trq_fs == RTT::NewData)
+    if(jnt_trq_fs != RTT::NoData && port_joint_torque_cmd_out.connected())
     {
       port_joint_torque_cmd_out.write(jnt_trq_cmd_out);
-      return;
     }
 }
