@@ -23,8 +23,10 @@ private:
 
     // Necessary components to run thread for serving ROS callbacks
     boost::thread non_rt_ros_queue_thread_;
-    ros::NodeHandle non_rt_ros_nh_;
+    boost::shared_ptr<ros::NodeHandle> non_rt_ros_nh_,cm_node_;
     ros::CallbackQueue non_rt_ros_queue_;
+
+    std::string cm_ns_;
 
     // The hardware interface
     RttHwInterface hw_interface_;
@@ -35,106 +37,26 @@ private:
     // For saving last update time, so period can be handed to controller manager
     ros::Time last_update_time_;
 
-private:
-    ros::NodeHandle cm_node_;
-
 public:
     RttRosControl(const std::string& name):
         TaskContext(name),
-        non_rt_ros_nh_(""),
-        hw_interface_(this),
-        cm_node_(non_rt_ros_nh_, "")
+        non_rt_ros_nh_(new ros::NodeHandle("")),
+        hw_interface_(this)
     {
-        non_rt_ros_nh_.setCallbackQueue(&non_rt_ros_queue_);
+        this->addProperty("controller_manager_ns",cm_ns_);
+        non_rt_ros_nh_->setCallbackQueue(&non_rt_ros_queue_);
         non_rt_ros_queue_thread_ = boost::thread( boost::bind( &RttRosControl::serviceNonRtRosQueue,this ) );
-
-	controller_manager_.reset(new controller_manager::ControllerManager(&hw_interface_, cm_node_));
-
-//         this->addOperation("list_controllers",&RttRosControl::listControllersSrv,this,RTT::ClientThread);
-//         this->addOperation("list_controller_types",&RttRosControl::listControllerTypesSrv,this,RTT::ClientThread);
-//         this->addOperation("load_controller",&RttRosControl::loadControllerSrv,this,RTT::ClientThread);
-//         this->addOperation("unload_controller",&RttRosControl::unloadControllerSrv,this,RTT::ClientThread);
-//         this->addOperation("reload_controller_libraries",&RttRosControl::reloadControllerLibrariesSrv,this,RTT::ClientThread);
-//         this->addOperation("switch_controller",&RttRosControl::switchControllerSrv,this,RTT::ClientThread);
-
     }
 
-    virtual ~RttRosControl()
+    bool configureHook()
     {
-
+        cm_node_.reset(new ros::NodeHandle(*non_rt_ros_nh_,cm_ns_));
+        controller_manager_.reset(new controller_manager::ControllerManager(&hw_interface_, *cm_node_));
+        return true;
     }
-
-//     bool listControllerTypesSrv(controller_manager_msgs::ListControllerTypes::Request &req,
-// 				controller_manager_msgs::ListControllerTypes::Response &resp)
-//     {
-//       return ros::service::call(cm_node_.getNamespace()+"/controller_manager/list_controller_types",req,resp);
-//     }
-//     bool listControllersSrv(controller_manager_msgs::ListControllers::Request &req,
-// 			    controller_manager_msgs::ListControllers::Response &resp)
-//     {
-//       return ros::service::call(cm_node_.getNamespace()+"/controller_manager/list_controllers",req,resp);
-//     }
-//     bool switchControllerSrv(controller_manager_msgs::SwitchController::Request &req,
-// 			    controller_manager_msgs::SwitchController::Response &resp)
-//     {
-//       return ros::service::call(cm_node_.getNamespace()+"/controller_manager/switch_controller",req,resp);
-//     }
-//     bool loadControllerSrv(controller_manager_msgs::LoadController::Request &req,
-// 			    controller_manager_msgs::LoadController::Response &resp)
-//     {
-//       return ros::service::call(cm_node_.getNamespace()+"/controller_manager/load_controller",req,resp);
-//     }
-//     bool unloadControllerSrv(controller_manager_msgs::UnloadController::Request &req,
-// 			  controller_manager_msgs::UnloadController::Response &resp)
-//     {
-//       return ros::service::call(cm_node_.getNamespace()+"/controller_manager/unload_controller",req,resp);
-//     }
-//     bool reloadControllerLibrariesSrv(controller_manager_msgs::ReloadControllerLibraries::Request &req,
-// 				      controller_manager_msgs::ReloadControllerLibraries::Response &resp)
-//     {
-//       return ros::service::call(cm_node_.getNamespace()+"/controller_manager/reload_controller_libraries",req,resp);
-//     }
-// 
-//     bool configureHook() {
-//         boost::shared_ptr<rtt_rosservice::ROSService> rosservice =
-//             this->getProvider<rtt_rosservice::ROSService>("rosservice");
-// 
-//         if(!rosservice)
-//         {
-//           log(Error) << "rosservice not available, please check if rtt_ros is imported" << endlog();
-// 	  return false;
-//         }
-// 
-//         rosservice->connect("list_controller_types",
-//                             "controller_manager/list_controller_types",
-//                             "controller_manager_msgs/ListControllerTypes");
-// 
-//         rosservice->connect("list_controllers",
-//                             "controller_manager/list_controllers",
-//                             "controller_manager_msgs/ListControllers");
-// 
-//         rosservice->connect("load_controller",
-//                             "controller_manager/load_controller",
-//                             "controller_manager_msgs/LoadController");
-// 
-//         rosservice->connect("reload_controller_libraries",
-//                             "controller_manager/reload_controller_libraries",
-//                             "controller_manager_msgs/ReloadControllerLibraries");
-// 
-//         rosservice->connect("switch_controller",
-//                             "controller_manager/switch_controller",
-//                             "controller_manager_msgs/SwitchController");
-// 
-//         rosservice->connect("unload_controller",
-//                             "controller_manager/unload_controller",
-//                             "controller_manager_msgs/UnloadController");
-// 	return true;
-// 
-//     }
-
     bool startHook(){
-      last_update_time_ = rtt_rosclock::rtt_now();
-      return true;
+        last_update_time_ = rtt_rosclock::rtt_now();
+        return true;
     }
 
     void updateHook() {
@@ -154,7 +76,7 @@ public:
     }
 
     void cleanupHook() {
-        non_rt_ros_nh_.shutdown();
+        non_rt_ros_nh_->shutdown();
         non_rt_ros_queue_thread_.join();
     }
 
@@ -162,7 +84,7 @@ public:
     {
         static const double timeout = 0.001;
 
-        while (non_rt_ros_nh_.ok()) {
+        while (non_rt_ros_nh_->ok()) {
             non_rt_ros_queue_.callAvailable(ros::WallDuration(timeout));
         }
     }
