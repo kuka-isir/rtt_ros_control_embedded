@@ -1,36 +1,11 @@
 #!/usr/bin/env deployer
-import("rtt_rospack")
-import("rtt_roscomm")
-import("rtt_std_srvs")
-
-import("rtt_control_msgs")
-import("rtt_controller_manager_msgs")
-
-runScript(ros.find("lwr_utils")+"/scripts/utils.ops")
-loadRobot(true)
 
 import("rtt_ros")
-
-## Need rtt_rosnode so ros::init is called
 import("rtt_rosnode")
 ros.import("rtt_ros_control_embedded")
 
-# Load the RttRosControl component
 loadComponent("RttRosControl","RttRosControl")
-
-## Give it a periodic activity
 setActivity("RttRosControl",0.001,LowestPriority,ORO_SCHED_RT)
 
-
-## Preload controllers
-
-RttRosControl.preloadController("joint_trajectory_controller")
-RttRosControl.preloadController("joint_state_controller")
-
-## Configure the RttRosControl component
 configureComponent("RttRosControl")
-
-connectAllPorts("RttRosControl",getRobotName(),ConnPolicy())
-
-## Start it
 startComponent("RttRosControl")

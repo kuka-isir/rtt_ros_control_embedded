@@ -55,8 +55,6 @@ class RttHwInterface : public hardware_interface::RobotHW
 public:
     RttHwInterface(RTT::TaskContext* owner);
 
-    //void cleanup();
-
     void read();
     void write();
 
