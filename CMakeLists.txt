@@ -15,27 +15,24 @@ find_package(catkin REQUIRED COMPONENTS
     cmake_modules
 )
 
-find_package(orocos_kdl REQUIRED)
 find_package(Eigen REQUIRED)
 
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${orocos_kdl_INCLUDE_DIRS}
   ${USE_OROCOS_INCLUDE_DIRS}
   ${EIGEN_INCLUDE_DIRS}
 )
 
 add_definitions(-DRTT_COMPONENT)
 
-add_library(rtt_hw_interface
+orocos_library(rtt_hw_interface
   src/rtt_hw_interface.cpp
 )
 orocos_component(${PROJECT_NAME} src/rtt_ros_control_embedded.cpp)
 
 target_link_libraries(rtt_hw_interface
   ${catkin_LIBRARIES}
-  ${USE_OROCOS_LIBRARIES}
   ${orocos_kdl_LIBRARIES}
 )
 
