@@ -70,6 +70,9 @@ owner_(owner)
       hardware_interface::JointHandle eff_handle(joint_state_interface_.getHandle(joint_names[i]), &jnt_trq_cmd_out[i]);
       effort_joint_interface_.registerHandle(eff_handle);
 
+      hardware_interface::JointHandle cart_opt_eff_handle(joint_state_interface_.getHandle(joint_names[i]), &jnt_trq_cmd_out[i]);
+      cart_opt_joint_interface_.registerHandle(eff_handle);
+      
       // Register handle in joint limits interface
       joint_limits_interface::EffortJointSaturationHandle handle(eff_handle, // We read the state and read/write the command
                                                                  limits_[i]);  // limits spec
@@ -80,6 +83,7 @@ owner_(owner)
     // registerInterface(&velocity_joint_interface_);
     registerInterface(&position_joint_interface_);
     registerInterface(&effort_joint_interface_);
+    registerInterface(&cart_opt_joint_interface_);
 }
 /*
 void RttHwInterface::cleanup()

@@ -39,7 +39,6 @@
 #include <joint_limits_interface/joint_limits_rosparam.h>
 
 #include <hardware_interface/robot_hw.h>
-//#include <rtt_ros_kdl_tools/tools.hpp>
 #include <rtt/Port.hpp>
 #include <Eigen/Core>
 #include <rtt/TaskContext.hpp>
@@ -48,7 +47,12 @@
 #include <rtt/InputPort.hpp>
 #include <rtt/OutputPort.hpp>
 #include <urdf/model.h>
-//#include <sensor_msgs/JointState.h>
+
+// New interface for cart_opt controller
+namespace hardware_interface
+{
+class CartOptEffortJointInterface : public JointCommandInterface {};
+}
 
 class RttHwInterface : public hardware_interface::RobotHW
 {
@@ -65,6 +69,7 @@ private:
     hardware_interface::PositionJointInterface position_joint_interface_;
     hardware_interface::VelocityJointInterface velocity_joint_interface_;
     hardware_interface::EffortJointInterface effort_joint_interface_;
+    hardware_interface::CartOptEffortJointInterface cart_opt_joint_interface_;
 
     joint_limits_interface::EffortJointSaturationInterface jnt_eff_limit_interface_;
 
