@@ -18,7 +18,9 @@
   <build_depend>urdf</build_depend>
   <build_depend>rtt_roscomm</build_depend>
   <build_depend>joint_limits_interface</build_depend>
+  <build_depend>eigen</build_depend>
 
+  <run_depend>eigen</run_depend>
   <run_depend>joint_limits_interface</run_depend>
   <run_depend>controller_manager</run_depend>
   <run_depend>hardware_interface</run_depend>
