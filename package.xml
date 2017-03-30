@@ -4,7 +4,7 @@
   <version>1.0.0</version>
   <description>RTT hardware interface and orocos wrapper </description>
 
-  <license>BSD</license>
+  <license>CeCILL-C</license>
 
   <author email="kohlbrecher@sim.tu-darmstadt.de">Stefan Kohlbrecher</author>
   <maintainer email="hoarau@isir.upmc.fr">Antoine Hoarau</maintainer>
