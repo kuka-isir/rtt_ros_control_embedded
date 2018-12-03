@@ -53,7 +53,7 @@ owner_(owner)
     for(size_t i=0; i<joint_names.size(); ++i)
     {
 
-      boost::shared_ptr<const urdf::Joint> urdf_joint = urdf_model.getJoint(joint_names[i]);
+      auto urdf_joint = urdf_model.getJoint(joint_names[i]);
       const bool urdf_limits_ok = getJointLimits(urdf_joint, limits_[i]);
       const bool urdf_soft_limits_ok = getSoftJointLimits(urdf_joint, soft_limits_[i]);
 
